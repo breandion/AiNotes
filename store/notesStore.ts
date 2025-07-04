@@ -1,8 +1,10 @@
 import { Note, Folder } from '@/types';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FOLDERS_KEY = 'folders';
 const NOTES_KEY = 'notes';
+
+// Check if we're in a client-side environment
+const isClient = typeof window !== 'undefined';
 
 class NotesStore {
   private folders: Folder[] = [];
@@ -11,14 +13,40 @@ class NotesStore {
   private loadPromise: Promise<void> | null = null;
   private saveTimeouts: Map<string, NodeJS.Timeout> = new Map();
   private pendingUpdates: Map<string, Partial<Note>> = new Map();
+  private AsyncStorage: any = null;
 
   constructor() {
-    // Start loading data but don't wait for it
-    this.loadPromise = this.loadData();
+    // Only start loading data if we're on the client side
+    if (isClient) {
+      this.loadPromise = this.loadData();
+    } else {
+      // On server side, mark as loaded immediately
+      this.isLoaded = true;
+      this.loadPromise = Promise.resolve();
+    }
+  }
+
+  private async getAsyncStorage() {
+    if (!this.AsyncStorage && isClient) {
+      const AsyncStorageModule = await import('@react-native-async-storage/async-storage');
+      this.AsyncStorage = AsyncStorageModule.default;
+    }
+    return this.AsyncStorage;
   }
 
   private async loadData(): Promise<void> {
+    if (!isClient) {
+      this.isLoaded = true;
+      return;
+    }
+
     try {
+      const AsyncStorage = await this.getAsyncStorage();
+      if (!AsyncStorage) {
+        this.isLoaded = true;
+        return;
+      }
+
       const [storedFolders, storedNotes] = await Promise.all([
         AsyncStorage.getItem(FOLDERS_KEY),
         AsyncStorage.getItem(NOTES_KEY)
@@ -51,7 +79,16 @@ class NotesStore {
   }
 
   private async saveData(): Promise<void> {
+    if (!isClient) {
+      return;
+    }
+
     try {
+      const AsyncStorage = await this.getAsyncStorage();
+      if (!AsyncStorage) {
+        return;
+      }
+
       await Promise.all([
         AsyncStorage.setItem(FOLDERS_KEY, JSON.stringify(this.folders)),
         AsyncStorage.setItem(NOTES_KEY, JSON.stringify(this.notes))
@@ -197,6 +234,10 @@ class NotesStore {
 
   // Force save all pending updates (useful when app goes to background)
   async forceSaveAll(): Promise<void> {
+    if (!isClient) {
+      return;
+    }
+
     // Clear all timeouts and save immediately
     for (const timeout of this.saveTimeouts.values()) {
       clearTimeout(timeout);
