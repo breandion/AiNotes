@@ -10,7 +10,7 @@ import {
   BackHandler,
   Platform,
   AppState,
-  Keyboard, KeyboardAvoidingView 
+
 } from 'react-native';
 import { Plus, Search } from 'lucide-react-native';
 import { notesStore } from '@/store/notesStore';
@@ -39,32 +39,6 @@ export default function NotesTab() {
   const [localNoteContent, setLocalNoteContent] = useState('');
   const titleUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const contentUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
-
-useEffect(() => {
-  const showSubscription = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
-  const hideSubscription = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
-
-  return () => {
-    showSubscription.remove();
-    hideSubscription.remove();
-  };
-}, []);
-
-  const KeyboardToolbar = () => (
-  <View style={styles.keyboardToolbar}>
-    <TouchableOpacity>
-      <Text style={styles.toolbarButton}>Undo</Text>
-    </TouchableOpacity>
-    <TouchableOpacity>
-      <Text style={styles.toolbarButton}>Redo</Text>
-    </TouchableOpacity>
-    <TouchableOpacity>
-      <Text style={styles.toolbarButton}>AI ✨</Text>
-    </TouchableOpacity>
-  </View>
-);
 
   // Load initial data
   useEffect(() => {
@@ -320,10 +294,6 @@ useEffect(() => {
   );
 
   const renderNoteDetailView = () => (
-    <KeyboardAvoidingView
-    style={{ flex: 1 }}
-    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
     <View style={styles.container}>
       <NotionHeader
         title={localNoteTitle || 'Untitled'}
@@ -349,7 +319,6 @@ useEffect(() => {
         />
       </View>
     </View>
-      </KeyboardAvoidingView>
   );
 
   return (
@@ -375,20 +344,6 @@ useEffect(() => {
 }
 
 const styles = StyleSheet.create({
-  keyboardToolbar: {
-  flexDirection: 'row',
-  justifyContent: 'space-around',
-  backgroundColor: '#f1f5f9',
-  padding: 10,
-  borderTopWidth: 1,
-  borderColor: '#e5e7eb',
-},
-
-toolbarButton: {
-  fontSize: 14,
-  fontFamily: 'Inter-Medium',
-  color: '#3b82f6',
-},
   titleInput: {
     fontSize: 24,
     fontWeight: 'bold',
