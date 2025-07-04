@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
   Platform,
+  Keyboard, KeyboardAvoidingView 
 } from 'react-native';
 import { ArrowLeft, MoveHorizontal as MoreHorizontal } from 'lucide-react-native';
 
