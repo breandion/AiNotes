@@ -14,6 +14,7 @@ export const Colors = {
     warning: '#f59e0b',
     error: '#ef4444',
     shadow: 'rgba(0, 0, 0, 0.1)',
+    statusBar: '#f8fafc',
   },
   dark: {
     background: '#0f172a',
@@ -30,6 +31,7 @@ export const Colors = {
     warning: '#fbbf24',
     error: '#f87171',
     shadow: 'rgba(0, 0, 0, 0.3)',
+    statusBar: '#0f172a',
   },
 };
 

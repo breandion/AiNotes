@@ -24,12 +24,14 @@ import UserProfileSheet from '@/components/UserProfileSheet';
 import KeyboardToolbar from '@/components/KeyboardToolbar';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ViewMode = 'folders' | 'notes' | 'note-detail';
 
 export default function NotesTab() {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme];
+  const insets = useSafeAreaInsets();
   
   const [viewMode, setViewMode] = useState<ViewMode>('folders');
   const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
@@ -385,29 +387,31 @@ export default function NotesTab() {
         onBack={handleBackToNotes}
       />
 
-      <KeyboardAvoidingView 
-        style={styles.noteEditorContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
-        <View style={styles.noteEditor}>
-          <TextInput
-            style={styles.titleInput}
-            value={localNoteTitle}
-            onChangeText={handleUpdateNoteTitle}
-            placeholder="Title"
-            placeholderTextColor={colors.textTertiary}          
-          />
-          <TextInput
-            style={styles.noteInput}
-            value={localNoteContent}
-            onChangeText={handleUpdateNoteContent}
-            multiline
-            placeholder="Start writing..."
-            placeholderTextColor={colors.textTertiary}
-            textAlignVertical="top"
-          />
-        </View>
+      <View style={styles.noteEditorWrapper}>
+        <KeyboardAvoidingView 
+          style={styles.noteEditorContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        >
+          <View style={styles.noteEditor}>
+            <TextInput
+              style={styles.titleInput}
+              value={localNoteTitle}
+              onChangeText={handleUpdateNoteTitle}
+              placeholder="Title"
+              placeholderTextColor={colors.textTertiary}          
+            />
+            <TextInput
+              style={styles.noteInput}
+              value={localNoteContent}
+              onChangeText={handleUpdateNoteContent}
+              multiline
+              placeholder="Start writing..."
+              placeholderTextColor={colors.textTertiary}
+              textAlignVertical="top"
+            />
+          </View>
+        </KeyboardAvoidingView>
 
         {isKeyboardVisible && (
           <KeyboardToolbar
@@ -420,7 +424,7 @@ export default function NotesTab() {
             onDismiss={handleDismissKeyboard}
           />
         )}
-      </KeyboardAvoidingView>
+      </View>
     </View>
   );
 
@@ -530,6 +534,10 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Inter-Regular',
     color: colors.textSecondary,
+  },
+  noteEditorWrapper: {
+    flex: 1,
+    position: 'relative',
   },
   noteEditorContainer: {
     flex: 1,
