@@ -306,8 +306,7 @@ export default function NotesTab() {
           value={localNoteTitle}
           onChangeText={handleUpdateNoteTitle}
           placeholder="Title"
-          placeholderTextColor="#888"
-          multiline
+          placeholderTextColor="#888"          
         />
         <TextInput
           style={styles.noteInput}
