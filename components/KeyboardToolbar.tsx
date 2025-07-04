@@ -17,7 +17,6 @@ import {
 } from 'lucide-react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface KeyboardToolbarProps {
   onUndo?: () => void;
@@ -40,9 +39,8 @@ export default function KeyboardToolbar({
 }: KeyboardToolbarProps) {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme];
-  const insets = useSafeAreaInsets();
 
-  const styles = createStyles(colors, insets);
+  const styles = createStyles(colors);
 
   return (
     <View style={styles.container}>
@@ -88,25 +86,28 @@ export default function KeyboardToolbar({
   );
 }
 
-const createStyles = (colors: typeof Colors.light, insets: any) => StyleSheet.create({
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
   container: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     ...Platform.select({
       ios: {
-        // Position above keyboard on iOS
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
-        // Use safe area insets for proper spacing
-        paddingBottom: Math.max(insets.bottom, 8),
+        // Add safe area padding for iOS
+        paddingBottom: 34, // Home indicator space
       },
       android: {
         elevation: 8,
-        // Ensure proper positioning on Android
-        paddingBottom: 8,
+        // Ensure it's above the keyboard
+        zIndex: 1000,
       },
     }),
   },

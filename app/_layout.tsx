@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import {
   View,
-  Platform,
 } from "react-native";
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -41,11 +40,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
-        <StatusBar 
-          style={isDark ? "light" : "dark"} 
-          backgroundColor={isDark ? "#0f172a" : "#f8fafc"}
-          translucent={false}
-        />
+        <StatusBar style={isDark ? "light" : "dark"} />
       </SafeAreaView>
     </SafeAreaProvider>
   );
