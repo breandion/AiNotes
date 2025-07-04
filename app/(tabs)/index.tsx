@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   TextInput,
   BackHandler,
   Platform,
+  AppState,
 } from 'react-native';
 import { Plus, Search } from 'lucide-react-native';
 import { notesStore } from '@/store/notesStore';
@@ -32,10 +33,36 @@ export default function NotesTab() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Local state for note editing to prevent lag
+  const [localNoteTitle, setLocalNoteTitle] = useState('');
+  const [localNoteContent, setLocalNoteContent] = useState('');
+  const titleUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const contentUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Load initial data
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  // Handle app state changes to force save when app goes to background
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'background' || nextAppState === 'inactive') {
+        notesStore.forceSaveAll();
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, []);
+
+  // Update local state when selected note changes
+  useEffect(() => {
+    if (selectedNote) {
+      setLocalNoteTitle(selectedNote.title);
+      setLocalNoteContent(selectedNote.content);
+    }
+  }, [selectedNote?.id]); // Only trigger when note ID changes, not on every update
 
   const loadInitialData = async () => {
     try {
@@ -91,9 +118,18 @@ export default function NotesTab() {
     setSearchQuery('');
   };
 
-  const handleBackToNotes = () => {
+  const handleBackToNotes = async () => {
+    // Force save any pending changes before going back
+    await notesStore.forceSaveAll();
+    
     setViewMode('notes');
     setSelectedNote(null);
+    
+    // Refresh notes list to show updated data
+    if (selectedFolder) {
+      const updatedNotes = await notesStore.getNotesByFolder(selectedFolder.id);
+      setNotes(updatedNotes);
+    }
   };
 
   const handleCreateFolder = async (name: string, color: string) => {
@@ -124,37 +160,39 @@ export default function NotesTab() {
     }
   };
 
-  const handleUpdateNote = async (content: string) => {
-    if (selectedNote) {
-      try {
-        const updated = await notesStore.updateNote(selectedNote.id, { content });
-        if (updated) {
-          setSelectedNote(updated);
-          if (selectedFolder) {
-            const updatedNotes = await notesStore.getNotesByFolder(selectedFolder.id);
-            setNotes(updatedNotes);
-          }
-        }
-      } catch (error) {
-        console.error('Error updating note:', error);
-      }
+  const handleUpdateNoteContent = (content: string) => {
+    if (!selectedNote) return;
+
+    // Update local state immediately for responsive UI
+    setLocalNoteContent(content);
+
+    // Clear existing timeout
+    if (contentUpdateTimeoutRef.current) {
+      clearTimeout(contentUpdateTimeoutRef.current);
+    }
+
+    // Use optimistic update for immediate UI response
+    const updatedNote = notesStore.updateNoteOptimistic(selectedNote.id, { content });
+    if (updatedNote) {
+      setSelectedNote(updatedNote);
     }
   };
 
-  const handleUpdateNoteTitle = async (newTitle: string) => {
-    if (selectedNote) {
-      try {
-        const updated = await notesStore.updateNote(selectedNote.id, { title: newTitle });
-        if (updated) {
-          setSelectedNote(updated);
-          if (selectedFolder) {
-            const updatedNotes = await notesStore.getNotesByFolder(selectedFolder.id);
-            setNotes(updatedNotes);
-          }
-        }
-      } catch (error) {
-        console.error('Error updating note title:', error);
-      }
+  const handleUpdateNoteTitle = (newTitle: string) => {
+    if (!selectedNote) return;
+
+    // Update local state immediately for responsive UI
+    setLocalNoteTitle(newTitle);
+
+    // Clear existing timeout
+    if (titleUpdateTimeoutRef.current) {
+      clearTimeout(titleUpdateTimeoutRef.current);
+    }
+
+    // Use optimistic update for immediate UI response
+    const updatedNote = notesStore.updateNoteOptimistic(selectedNote.id, { title: newTitle });
+    if (updatedNote) {
+      setSelectedNote(updatedNote);
     }
   };
 
@@ -257,7 +295,7 @@ export default function NotesTab() {
   const renderNoteDetailView = () => (
     <View style={styles.container}>
       <NotionHeader
-        title={selectedNote?.title}
+        title={localNoteTitle || 'Untitled'}
         showBack
         onBack={handleBackToNotes}
       />
@@ -265,16 +303,16 @@ export default function NotesTab() {
       <View style={styles.noteEditor}>
         <TextInput
           style={styles.titleInput}
-          value={selectedNote?.title}
-          onChangeText={(title) => handleUpdateNoteTitle(title)}
+          value={localNoteTitle}
+          onChangeText={handleUpdateNoteTitle}
           placeholder="Title"
           placeholderTextColor="#888"
           multiline
         />
         <TextInput
           style={styles.noteInput}
-          value={selectedNote?.content}
-          onChangeText={handleUpdateNote}
+          value={localNoteContent}
+          onChangeText={handleUpdateNoteContent}
           multiline
           placeholder="Start writing..."
           textAlignVertical="top"

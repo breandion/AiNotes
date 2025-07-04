@@ -9,6 +9,8 @@ class NotesStore {
   private notes: Note[] = [];
   private isLoaded = false;
   private loadPromise: Promise<void> | null = null;
+  private saveTimeouts: Map<string, NodeJS.Timeout> = new Map();
+  private pendingUpdates: Map<string, Partial<Note>> = new Map();
 
   constructor() {
     // Start loading data but don't wait for it
@@ -57,6 +59,23 @@ class NotesStore {
     } catch (error) {
       console.error('Error saving data to AsyncStorage:', error);
     }
+  }
+
+  private debouncedSave(noteId: string, delay: number = 1000): void {
+    // Clear existing timeout for this note
+    const existingTimeout = this.saveTimeouts.get(noteId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+
+    // Set new timeout
+    const timeout = setTimeout(async () => {
+      await this.saveData();
+      this.saveTimeouts.delete(noteId);
+      this.pendingUpdates.delete(noteId);
+    }, delay);
+
+    this.saveTimeouts.set(noteId, timeout);
   }
 
   // Ensure data is loaded before returning
@@ -109,6 +128,29 @@ class NotesStore {
     return note;
   }
 
+  // Optimistic update with debounced saving
+  updateNoteOptimistic(noteId: string, updates: Partial<Note>): Note | undefined {
+    const noteIndex = this.notes.findIndex(note => note.id === noteId);
+    if (noteIndex !== -1) {
+      // Apply optimistic update immediately
+      this.notes[noteIndex] = {
+        ...this.notes[noteIndex],
+        ...updates,
+        updatedAt: new Date(),
+      };
+
+      // Store pending update
+      const existingUpdate = this.pendingUpdates.get(noteId) || {};
+      this.pendingUpdates.set(noteId, { ...existingUpdate, ...updates });
+
+      // Debounce the save operation
+      this.debouncedSave(noteId);
+
+      return this.notes[noteIndex];
+    }
+    return undefined;
+  }
+
   async updateNote(noteId: string, updates: Partial<Note>): Promise<Note | undefined> {
     await this.ensureLoaded();
     const noteIndex = this.notes.findIndex(note => note.id === noteId);
@@ -126,6 +168,15 @@ class NotesStore {
 
   async deleteNote(noteId: string): Promise<boolean> {
     await this.ensureLoaded();
+    
+    // Clear any pending saves for this note
+    const existingTimeout = this.saveTimeouts.get(noteId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+      this.saveTimeouts.delete(noteId);
+    }
+    this.pendingUpdates.delete(noteId);
+
     const index = this.notes.findIndex(note => note.id === noteId);
     if (index !== -1) {
       this.notes.splice(index, 1);
@@ -142,6 +193,17 @@ class NotesStore {
       note.title.toLowerCase().includes(lowercaseQuery) ||
       note.content.toLowerCase().includes(lowercaseQuery)
     );
+  }
+
+  // Force save all pending updates (useful when app goes to background)
+  async forceSaveAll(): Promise<void> {
+    // Clear all timeouts and save immediately
+    for (const timeout of this.saveTimeouts.values()) {
+      clearTimeout(timeout);
+    }
+    this.saveTimeouts.clear();
+    this.pendingUpdates.clear();
+    await this.saveData();
   }
 }
 
