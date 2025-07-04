@@ -10,7 +10,6 @@ import {
   BackHandler,
   Platform,
   AppState,
-
 } from 'react-native';
 import { Plus, Search } from 'lucide-react-native';
 import { notesStore } from '@/store/notesStore';
