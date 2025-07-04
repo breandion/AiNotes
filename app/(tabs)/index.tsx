@@ -10,6 +10,8 @@ import {
   BackHandler,
   Platform,
   AppState,
+  Keyboard,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Plus, Search } from 'lucide-react-native';
 import { notesStore } from '@/store/notesStore';
@@ -19,6 +21,7 @@ import NoteCard from '@/components/NoteCard';
 import CreateFolderModal from '@/components/CreateFolderModal';
 import NotionHeader from '@/components/NotionHeader';
 import UserProfileSheet from '@/components/UserProfileSheet';
+import KeyboardToolbar from '@/components/KeyboardToolbar';
 
 type ViewMode = 'folders' | 'notes' | 'note-detail';
 
@@ -32,6 +35,8 @@ export default function NotesTab() {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [folderNoteCounts, setFolderNoteCounts] = useState<Record<string, number>>({});
 
   // Local state for note editing to prevent lag
   const [localNoteTitle, setLocalNoteTitle] = useState('');
@@ -42,6 +47,21 @@ export default function NotesTab() {
   // Load initial data
   useEffect(() => {
     loadInitialData();
+  }, []);
+
+  // Keyboard listeners
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setIsKeyboardVisible(true);
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardDidShowListener?.remove();
+      keyboardDidHideListener?.remove();
+    };
   }, []);
 
   // Handle app state changes to force save when app goes to background
@@ -64,18 +84,6 @@ export default function NotesTab() {
     }
   }, [selectedNote?.id]); // Only trigger when note ID changes, not on every update
 
-  const loadInitialData = async () => {
-    try {
-      setIsLoading(true);
-      const loadedFolders = await notesStore.getFolders();
-      setFolders(loadedFolders);
-    } catch (error) {
-      console.error('Error loading initial data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Android back button handler
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -95,6 +103,26 @@ export default function NotesTab() {
       return () => backHandler.remove();
     }
   }, [viewMode]);
+
+  const loadInitialData = async () => {
+    try {
+      setIsLoading(true);
+      const loadedFolders = await notesStore.getFolders();
+      setFolders(loadedFolders);
+      
+      // Load note counts for each folder
+      const counts: Record<string, number> = {};
+      for (const folder of loadedFolders) {
+        const folderNotes = await notesStore.getNotesByFolder(folder.id);
+        counts[folder.id] = folderNotes.length;
+      }
+      setFolderNoteCounts(counts);
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleFolderPress = async (folder: Folder) => {
     setSelectedFolder(folder);
@@ -137,6 +165,14 @@ export default function NotesTab() {
       await notesStore.createFolder(name, color);
       const updatedFolders = await notesStore.getFolders();
       setFolders(updatedFolders);
+      
+      // Update note counts
+      const counts: Record<string, number> = {};
+      for (const folder of updatedFolders) {
+        const folderNotes = await notesStore.getNotesByFolder(folder.id);
+        counts[folder.id] = folderNotes.length;
+      }
+      setFolderNoteCounts(counts);
     } catch (error) {
       console.error('Error creating folder:', error);
     }
@@ -154,6 +190,12 @@ export default function NotesTab() {
         setNotes(updatedNotes);
         setSelectedNote(newNote);
         setViewMode('note-detail');
+        
+        // Update folder note count
+        setFolderNoteCounts(prev => ({
+          ...prev,
+          [selectedFolder.id]: updatedNotes.length
+        }));
       } catch (error) {
         console.error('Error creating note:', error);
       }
@@ -208,6 +250,41 @@ export default function NotesTab() {
     console.log('Settings pressed');
   };
 
+  // Keyboard toolbar handlers
+  const handleUndo = () => {
+    console.log('Undo pressed');
+    // Implement undo functionality
+  };
+
+  const handleRedo = () => {
+    console.log('Redo pressed');
+    // Implement redo functionality
+  };
+
+  const handleBold = () => {
+    console.log('Bold pressed');
+    // Implement bold formatting
+  };
+
+  const handleItalic = () => {
+    console.log('Italic pressed');
+    // Implement italic formatting
+  };
+
+  const handleList = () => {
+    console.log('List pressed');
+    // Implement list formatting
+  };
+
+  const handleAI = () => {
+    console.log('AI pressed');
+    // Implement AI assistance
+  };
+
+  const handleDismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
+
   const renderFoldersView = () => (
     <View style={styles.container}>
       <NotionHeader
@@ -249,7 +326,7 @@ export default function NotesTab() {
             <FolderCard
               key={folder.id}
               folder={folder}
-              noteCount={0} 
+              noteCount={folderNoteCounts[folder.id] || 0}
               onPress={() => handleFolderPress(folder)}
             />
           ))
@@ -293,7 +370,10 @@ export default function NotesTab() {
   );
 
   const renderNoteDetailView = () => (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       <NotionHeader
         title={localNoteTitle || 'Untitled'}
         showBack
@@ -317,7 +397,19 @@ export default function NotesTab() {
           textAlignVertical="top"
         />
       </View>
-    </View>
+
+      {isKeyboardVisible && (
+        <KeyboardToolbar
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          onBold={handleBold}
+          onItalic={handleItalic}
+          onList={handleList}
+          onAI={handleAI}
+          onDismiss={handleDismissKeyboard}
+        />
+      )}
+    </KeyboardAvoidingView>
   );
 
   return (
