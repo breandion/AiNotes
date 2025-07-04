@@ -22,10 +22,15 @@ import CreateFolderModal from '@/components/CreateFolderModal';
 import NotionHeader from '@/components/NotionHeader';
 import UserProfileSheet from '@/components/UserProfileSheet';
 import KeyboardToolbar from '@/components/KeyboardToolbar';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { Colors } from '@/constants/Colors';
 
 type ViewMode = 'folders' | 'notes' | 'note-detail';
 
 export default function NotesTab() {
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme];
+  
   const [viewMode, setViewMode] = useState<ViewMode>('folders');
   const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -43,6 +48,8 @@ export default function NotesTab() {
   const [localNoteContent, setLocalNoteContent] = useState('');
   const titleUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const contentUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const styles = createStyles(colors);
 
   // Load initial data
   useEffect(() => {
@@ -302,10 +309,11 @@ export default function NotesTab() {
       />
 
       <View style={styles.searchContainer}>
-        <Search color="#6b7280" size={18} />
+        <Search color={colors.textSecondary} size={18} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search notes..."
+          placeholderTextColor={colors.textTertiary}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -370,46 +378,50 @@ export default function NotesTab() {
   );
 
   const renderNoteDetailView = () => (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <View style={styles.container}>
       <NotionHeader
         title={localNoteTitle || 'Untitled'}
         showBack
         onBack={handleBackToNotes}
       />
 
-      <View style={styles.noteEditor}>
-        <TextInput
-          style={styles.titleInput}
-          value={localNoteTitle}
-          onChangeText={handleUpdateNoteTitle}
-          placeholder="Title"
-          placeholderTextColor="#888"          
-        />
-        <TextInput
-          style={styles.noteInput}
-          value={localNoteContent}
-          onChangeText={handleUpdateNoteContent}
-          multiline
-          placeholder="Start writing..."
-          textAlignVertical="top"
-        />
-      </View>
+      <KeyboardAvoidingView 
+        style={styles.noteEditorContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <View style={styles.noteEditor}>
+          <TextInput
+            style={styles.titleInput}
+            value={localNoteTitle}
+            onChangeText={handleUpdateNoteTitle}
+            placeholder="Title"
+            placeholderTextColor={colors.textTertiary}          
+          />
+          <TextInput
+            style={styles.noteInput}
+            value={localNoteContent}
+            onChangeText={handleUpdateNoteContent}
+            multiline
+            placeholder="Start writing..."
+            placeholderTextColor={colors.textTertiary}
+            textAlignVertical="top"
+          />
+        </View>
 
-      {isKeyboardVisible && (
-        <KeyboardToolbar
-          onUndo={handleUndo}
-          onRedo={handleRedo}
-          onBold={handleBold}
-          onItalic={handleItalic}
-          onList={handleList}
-          onAI={handleAI}
-          onDismiss={handleDismissKeyboard}
-        />
-      )}
-    </KeyboardAvoidingView>
+        {isKeyboardVisible && (
+          <KeyboardToolbar
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            onBold={handleBold}
+            onItalic={handleItalic}
+            onList={handleList}
+            onAI={handleAI}
+            onDismiss={handleDismissKeyboard}
+          />
+        )}
+      </KeyboardAvoidingView>
+    </View>
   );
 
   return (
@@ -434,22 +446,16 @@ export default function NotesTab() {
   );
 }
 
-const styles = StyleSheet.create({
-  titleInput: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#000',
-  },
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
   },
   addButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.primary,
     width: 32,
     height: 32,
     borderRadius: 8,
@@ -459,21 +465,21 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     marginHorizontal: 16,
     marginVertical: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: colors.borderLight,
   },
   searchInput: {
     flex: 1,
     marginLeft: 10,
     fontSize: 15,
     fontFamily: 'Inter-Regular',
-    color: '#111827',
+    color: colors.text,
   },
   content: {
     flex: 1,
@@ -489,14 +495,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: '#374151',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   sectionCount: {
     fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: '#9ca3af',
+    color: colors.textTertiary,
   },
   emptyState: {
     alignItems: 'center',
@@ -506,13 +512,13 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontFamily: 'Inter-SemiBold',
-    color: '#6b7280',
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: '#9ca3af',
+    color: colors.textTertiary,
     textAlign: 'center',
   },
   loadingState: {
@@ -523,22 +529,31 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     fontFamily: 'Inter-Regular',
-    color: '#6b7280',
+    color: colors.textSecondary,
+  },
+  noteEditorContainer: {
+    flex: 1,
   },
   noteEditor: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     margin: 16,
     borderRadius: 12,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: colors.borderLight,
+  },
+  titleInput: {
+    fontSize: 24,
+    fontFamily: 'Inter-SemiBold',
+    marginBottom: 16,
+    color: colors.text,
   },
   noteInput: {
     flex: 1,
     fontSize: 16,
     fontFamily: 'Inter-Regular',
-    color: '#111827',
+    color: colors.text,
     lineHeight: 24,
   },
 });

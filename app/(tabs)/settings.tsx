@@ -6,20 +6,28 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  Switch,
 } from 'react-native';
-import { User, Bell, Shield, Palette, CircleHelp as HelpCircle, Info, ChevronRight } from 'lucide-react-native';
+import { User, Bell, Shield, Palette, CircleHelp as HelpCircle, Info, ChevronRight, Moon, Sun, Smartphone } from 'lucide-react-native';
 import NotionHeader from '@/components/NotionHeader';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { Colors } from '@/constants/Colors';
 
 interface SettingItemProps {
   icon: React.ReactNode;
   title: string;
   subtitle?: string;
   onPress?: () => void;
+  rightElement?: React.ReactNode;
 }
 
-function SettingItem({ icon, title, subtitle, onPress }: SettingItemProps) {
+function SettingItem({ icon, title, subtitle, onPress, rightElement }: SettingItemProps) {
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme];
+  const styles = createStyles(colors);
+
   return (
-    <TouchableOpacity style={styles.settingItem} onPress={onPress}>
+    <TouchableOpacity style={styles.settingItem} onPress={onPress} disabled={!onPress}>
       <View style={styles.settingLeft}>
         <View style={styles.iconContainer}>
           {icon}
@@ -29,12 +37,45 @@ function SettingItem({ icon, title, subtitle, onPress }: SettingItemProps) {
           {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
         </View>
       </View>
-      <ChevronRight color="#d1d5db" size={18} />
+      {rightElement || <ChevronRight color={colors.border} size={18} />}
     </TouchableOpacity>
   );
 }
 
 export default function SettingsTab() {
+  const { colorScheme, userPreference, setColorScheme } = useColorScheme();
+  const colors = Colors[colorScheme];
+  const styles = createStyles(colors);
+
+  const getThemeIcon = () => {
+    switch (userPreference) {
+      case 'light':
+        return <Sun color={colors.textSecondary} size={20} />;
+      case 'dark':
+        return <Moon color={colors.textSecondary} size={20} />;
+      default:
+        return <Smartphone color={colors.textSecondary} size={20} />;
+    }
+  };
+
+  const getThemeSubtitle = () => {
+    switch (userPreference) {
+      case 'light':
+        return 'Always use light theme';
+      case 'dark':
+        return 'Always use dark theme';
+      default:
+        return 'Follow system setting';
+    }
+  };
+
+  const handleThemePress = () => {
+    // Cycle through theme options
+    const nextTheme = userPreference === 'auto' ? 'light' : 
+                     userPreference === 'light' ? 'dark' : 'auto';
+    setColorScheme(nextTheme);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <NotionHeader
@@ -47,13 +88,13 @@ export default function SettingsTab() {
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.sectionContent}>
             <SettingItem
-              icon={<User color="#6b7280" size={20} />}
+              icon={<User color={colors.textSecondary} size={20} />}
               title="Profile"
               subtitle="Manage your account information"
               onPress={() => {}}
             />
             <SettingItem
-              icon={<Bell color="#6b7280" size={20} />}
+              icon={<Bell color={colors.textSecondary} size={20} />}
               title="Notifications"
               subtitle="Push notifications and alerts"
               onPress={() => {}}
@@ -65,13 +106,13 @@ export default function SettingsTab() {
           <Text style={styles.sectionTitle}>Preferences</Text>
           <View style={styles.sectionContent}>
             <SettingItem
-              icon={<Palette color="#6b7280" size={20} />}
+              icon={getThemeIcon()}
               title="Appearance"
-              subtitle="Theme and display options"
-              onPress={() => {}}
+              subtitle={getThemeSubtitle()}
+              onPress={handleThemePress}
             />
             <SettingItem
-              icon={<Shield color="#6b7280" size={20} />}
+              icon={<Shield color={colors.textSecondary} size={20} />}
               title="Privacy & Security"
               subtitle="Data protection settings"
               onPress={() => {}}
@@ -83,13 +124,13 @@ export default function SettingsTab() {
           <Text style={styles.sectionTitle}>Support</Text>
           <View style={styles.sectionContent}>
             <SettingItem
-              icon={<HelpCircle color="#6b7280" size={20} />}
+              icon={<HelpCircle color={colors.textSecondary} size={20} />}
               title="Help & Support"
               subtitle="Get help and contact us"
               onPress={() => {}}
             />
             <SettingItem
-              icon={<Info color="#6b7280" size={20} />}
+              icon={<Info color={colors.textSecondary} size={20} />}
               title="About"
               subtitle="Version 1.0.0"
               onPress={() => {}}
@@ -107,10 +148,10 @@ export default function SettingsTab() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
@@ -121,17 +162,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: '#374151',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 8,
     paddingHorizontal: 20,
   },
   sectionContent: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: colors.borderLight,
   },
   settingItem: {
     flexDirection: 'row',
@@ -140,7 +181,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f8fafc',
+    borderBottomColor: colors.background,
   },
   settingLeft: {
     flexDirection: 'row',
@@ -151,7 +192,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -162,13 +203,13 @@ const styles = StyleSheet.create({
   settingTitle: {
     fontSize: 16,
     fontFamily: 'Inter-Medium',
-    color: '#111827',
+    color: colors.text,
     marginBottom: 2,
   },
   settingSubtitle: {
     fontSize: 13,
     fontFamily: 'Inter-Regular',
-    color: '#6b7280',
+    color: colors.textSecondary,
     lineHeight: 18,
   },
   footer: {
@@ -178,6 +219,6 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: '#9ca3af',
+    color: colors.textTertiary,
   },
 });

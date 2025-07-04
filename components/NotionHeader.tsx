@@ -6,9 +6,10 @@ import {
   StyleSheet,
   Image,
   Platform,
-  Keyboard, KeyboardAvoidingView 
 } from 'react-native';
 import { ArrowLeft, MoveHorizontal as MoreHorizontal } from 'lucide-react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { Colors } from '@/constants/Colors';
 
 interface NotionHeaderProps {
   title?: string;
@@ -31,6 +32,10 @@ export default function NotionHeader({
   subtitle,
   showBackWithTitle
 }: NotionHeaderProps) {
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme];
+  const styles = createStyles(colors);
+
   const user = {
     name: 'Alex Johnson',
     avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=40&h=40&fit=crop',
@@ -44,12 +49,12 @@ export default function NotionHeader({
           {showBack && (
             showBackWithTitle ? (
               <TouchableOpacity style={styles.backButton} onPress={onBack}>
-              <ArrowLeft color="#6b7280" size={20} />
+              <ArrowLeft color={colors.textSecondary} size={20} />
               <Text>{showBackWithTitle}</Text>
             </TouchableOpacity>
             ) : (
               <TouchableOpacity style={styles.backButton} onPress={onBack}>
-              <ArrowLeft color="#6b7280" size={20} />
+              <ArrowLeft color={colors.textSecondary} size={20} />
             </TouchableOpacity>
             )
           )}
@@ -77,7 +82,7 @@ export default function NotionHeader({
         <View style={styles.right}>
           {rightAction || (
             <TouchableOpacity style={styles.moreButton}>
-              <MoreHorizontal color="#6b7280" size={20} />
+              <MoreHorizontal color={colors.textSecondary} size={20} />
             </TouchableOpacity>
           )}
         </View>
@@ -86,11 +91,11 @@ export default function NotionHeader({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
   container: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: colors.borderLight,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -134,7 +139,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: colors.surfaceSecondary,
     marginRight: 12,
   },
   userInfo: {
@@ -143,7 +148,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
-    color: '#111827',
+    color: colors.text,
     lineHeight: 20,
   },
   titleContainer: {
@@ -152,13 +157,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
-    color: '#111827',
+    color: colors.text,
     lineHeight: 20,
   },
   subtitle: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
-    color: '#6b7280',
+    color: colors.textSecondary,
     marginTop: 1,
   },
   right: {

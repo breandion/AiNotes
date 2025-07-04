@@ -14,8 +14,9 @@ import {
   List, 
   Sparkles,
   ChevronDown,
-  Type
 } from 'lucide-react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { Colors } from '@/constants/Colors';
 
 interface KeyboardToolbarProps {
   onUndo?: () => void;
@@ -36,43 +37,48 @@ export default function KeyboardToolbar({
   onAI,
   onDismiss,
 }: KeyboardToolbarProps) {
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme];
+
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.container}>
       <View style={styles.toolbar}>
         <View style={styles.leftSection}>
           <TouchableOpacity style={styles.toolButton} onPress={onUndo}>
-            <Undo2 color="#6b7280" size={18} />
+            <Undo2 color={colors.textSecondary} size={18} />
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.toolButton} onPress={onRedo}>
-            <Redo2 color="#6b7280" size={18} />
+            <Redo2 color={colors.textSecondary} size={18} />
           </TouchableOpacity>
           
           <View style={styles.separator} />
           
           <TouchableOpacity style={styles.toolButton} onPress={onBold}>
-            <Bold color="#6b7280" size={18} />
+            <Bold color={colors.textSecondary} size={18} />
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.toolButton} onPress={onItalic}>
-            <Italic color="#6b7280" size={18} />
+            <Italic color={colors.textSecondary} size={18} />
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.toolButton} onPress={onList}>
-            <List color="#6b7280" size={18} />
+            <List color={colors.textSecondary} size={18} />
           </TouchableOpacity>
           
           <View style={styles.separator} />
           
           <TouchableOpacity style={styles.aiButton} onPress={onAI}>
-            <Sparkles color="#3b82f6" size={16} />
+            <Sparkles color={colors.primary} size={16} />
             <Text style={styles.aiButtonText}>AI</Text>
           </TouchableOpacity>
         </View>
         
         <View style={styles.rightSection}>
           <TouchableOpacity style={styles.dismissButton} onPress={onDismiss}>
-            <ChevronDown color="#6b7280" size={20} />
+            <ChevronDown color={colors.textSecondary} size={20} />
           </TouchableOpacity>
         </View>
       </View>
@@ -80,20 +86,28 @@ export default function KeyboardToolbar({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
   container: {
-    backgroundColor: '#f8fafc',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: colors.border,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: -1 },
+        shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.1,
-        shadowRadius: 2,
+        shadowRadius: 4,
+        // Add safe area padding for iOS
+        paddingBottom: 34, // Home indicator space
       },
       android: {
-        elevation: 4,
+        elevation: 8,
+        // Ensure it's above the keyboard
+        zIndex: 1000,
       },
     }),
   },
@@ -102,8 +116,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    minHeight: 44,
+    paddingVertical: 12,
+    minHeight: 56,
   },
   leftSection: {
     flexDirection: 'row',
@@ -115,8 +129,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   toolButton: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
@@ -125,32 +139,32 @@ const styles = StyleSheet.create({
   aiButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#eff6ff',
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 8,
     marginRight: 4,
   },
   aiButtonText: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: '#3b82f6',
+    color: colors.primary,
     marginLeft: 4,
   },
   dismissButton: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.surfaceSecondary,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
   },
   separator: {
     width: 1,
-    height: 20,
-    backgroundColor: '#e5e7eb',
+    height: 24,
+    backgroundColor: colors.border,
     marginHorizontal: 8,
   },
 });
