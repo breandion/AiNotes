@@ -88,10 +88,6 @@ export default function KeyboardToolbar({
 
 const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
   container: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.border,
@@ -101,12 +97,14 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
-        // Add safe area padding for iOS
-        paddingBottom: 34, // Home indicator space
+        // Remove absolute positioning for iOS - let KeyboardAvoidingView handle it
       },
       android: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
         elevation: 8,
-        // Ensure it's above the keyboard
         zIndex: 1000,
       },
     }),

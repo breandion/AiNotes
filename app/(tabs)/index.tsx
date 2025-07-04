@@ -41,6 +41,7 @@ export default function NotesTab() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [folderNoteCounts, setFolderNoteCounts] = useState<Record<string, number>>({});
 
   // Local state for note editing to prevent lag
@@ -56,14 +57,23 @@ export default function NotesTab() {
     loadInitialData();
   }, []);
 
-  // Keyboard listeners
+  // Enhanced keyboard listeners for iOS
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-      setIsKeyboardVisible(true);
-    });
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      setIsKeyboardVisible(false);
-    });
+    const keyboardDidShowListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setIsKeyboardVisible(true);
+        setKeyboardHeight(e.endCoordinates.height);
+      }
+    );
+    
+    const keyboardDidHideListener = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setIsKeyboardVisible(false);
+        setKeyboardHeight(0);
+      }
+    );
 
     return () => {
       keyboardDidShowListener?.remove();
@@ -388,7 +398,7 @@ export default function NotesTab() {
       <KeyboardAvoidingView 
         style={styles.noteEditorContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <View style={styles.noteEditor}>
           <TextInput
@@ -409,16 +419,29 @@ export default function NotesTab() {
           />
         </View>
 
+        {/* Render toolbar differently for iOS vs Android */}
         {isKeyboardVisible && (
-          <KeyboardToolbar
-            onUndo={handleUndo}
-            onRedo={handleRedo}
-            onBold={handleBold}
-            onItalic={handleItalic}
-            onList={handleList}
-            onAI={handleAI}
-            onDismiss={handleDismissKeyboard}
-          />
+          Platform.OS === 'ios' ? (
+            <KeyboardToolbar
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              onBold={handleBold}
+              onItalic={handleItalic}
+              onList={handleList}
+              onAI={handleAI}
+              onDismiss={handleDismissKeyboard}
+            />
+          ) : (
+            <KeyboardToolbar
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              onBold={handleBold}
+              onItalic={handleItalic}
+              onList={handleList}
+              onAI={handleAI}
+              onDismiss={handleDismissKeyboard}
+            />
+          )
         )}
       </KeyboardAvoidingView>
     </View>
