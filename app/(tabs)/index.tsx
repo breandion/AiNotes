@@ -57,10 +57,10 @@ export default function NotesTab() {
     loadInitialData();
   }, []);
 
-  // Enhanced keyboard listeners for iOS
+  // Enhanced keyboard listeners for both platforms
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      'keyboardDidShow',
       (e) => {
         setIsKeyboardVisible(true);
         setKeyboardHeight(e.endCoordinates.height);
@@ -68,7 +68,7 @@ export default function NotesTab() {
     );
     
     const keyboardDidHideListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      'keyboardDidHide',
       () => {
         setIsKeyboardVisible(false);
         setKeyboardHeight(0);
@@ -395,33 +395,42 @@ export default function NotesTab() {
         onBack={handleBackToNotes}
       />
 
-      <KeyboardAvoidingView 
-        style={styles.noteEditorContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
-        <View style={styles.noteEditor}>
-          <TextInput
-            style={styles.titleInput}
-            value={localNoteTitle}
-            onChangeText={handleUpdateNoteTitle}
-            placeholder="Title"
-            placeholderTextColor={colors.textTertiary}          
-          />
-          <TextInput
-            style={styles.noteInput}
-            value={localNoteContent}
-            onChangeText={handleUpdateNoteContent}
-            multiline
-            placeholder="Start writing..."
-            placeholderTextColor={colors.textTertiary}
-            textAlignVertical="top"
-          />
-        </View>
+      <View style={styles.noteEditorWrapper}>
+        <KeyboardAvoidingView 
+          style={styles.noteEditorContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        >
+          <View style={styles.noteEditor}>
+            <TextInput
+              style={styles.titleInput}
+              value={localNoteTitle}
+              onChangeText={handleUpdateNoteTitle}
+              placeholder="Title"
+              placeholderTextColor={colors.textTertiary}          
+            />
+            <TextInput
+              style={styles.noteInput}
+              value={localNoteContent}
+              onChangeText={handleUpdateNoteContent}
+              multiline
+              placeholder="Start writing..."
+              placeholderTextColor={colors.textTertiary}
+              textAlignVertical="top"
+            />
+          </View>
+        </KeyboardAvoidingView>
 
-        {/* Render toolbar differently for iOS vs Android */}
+        {/* Fixed toolbar that sticks to keyboard */}
         {isKeyboardVisible && (
-          Platform.OS === 'ios' ? (
+          <View style={[
+            styles.keyboardToolbarContainer,
+            {
+              bottom: Platform.OS === 'ios' 
+                ? keyboardHeight 
+                : keyboardHeight - (Platform.OS === 'android' ? 20 : 0)
+            }
+          ]}>
             <KeyboardToolbar
               onUndo={handleUndo}
               onRedo={handleRedo}
@@ -431,19 +440,9 @@ export default function NotesTab() {
               onAI={handleAI}
               onDismiss={handleDismissKeyboard}
             />
-          ) : (
-            <KeyboardToolbar
-              onUndo={handleUndo}
-              onRedo={handleRedo}
-              onBold={handleBold}
-              onItalic={handleItalic}
-              onList={handleList}
-              onAI={handleAI}
-              onDismiss={handleDismissKeyboard}
-            />
-          )
+          </View>
         )}
-      </KeyboardAvoidingView>
+      </View>
     </View>
   );
 
@@ -554,6 +553,10 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: colors.textSecondary,
   },
+  noteEditorWrapper: {
+    flex: 1,
+    position: 'relative',
+  },
   noteEditorContainer: {
     flex: 1,
   },
@@ -578,5 +581,22 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: colors.text,
     lineHeight: 24,
+  },
+  keyboardToolbarContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 8,
   },
 });
