@@ -423,14 +423,7 @@ export default function NotesTab() {
 
         {/* Fixed toolbar that sticks to keyboard */}
         {isKeyboardVisible && (
-          <View style={[
-            styles.keyboardToolbarContainer,
-            {
-              bottom: Platform.OS === 'ios' 
-                ? keyboardHeight 
-                : keyboardHeight - (Platform.OS === 'android' ? 20 : 0)
-            }
-          ]}>
+          
             <KeyboardToolbar
               onUndo={handleUndo}
               onRedo={handleRedo}
@@ -440,7 +433,6 @@ export default function NotesTab() {
               onAI={handleAI}
               onDismiss={handleDismissKeyboard}
             />
-          </View>
         )}
       </View>
     </View>
