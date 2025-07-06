@@ -94,12 +94,7 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     // Remove platform-specific positioning - let parent handle it
   },
   toolbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    minHeight: 56,
+    
   },
   leftSection: {
     flexDirection: 'row',
