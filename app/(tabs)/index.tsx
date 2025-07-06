@@ -444,14 +444,12 @@ export default function NotesTab() {
             placeholderTextColor={colors.textTertiary}
             textAlignVertical="top"
           />
-        </View>
-        
-        {/* Toolbar positioned at bottom when keyboard is visible */}
+        </View>      
         {isKeyboardVisible && (
           <View style={[
             styles.keyboardToolbarContainer,
             Platform.OS === 'ios' && { 
-              position: 'relative',
+              position: 'absolute',
               marginBottom: 0
             },
             Platform.OS === 'android' && {
@@ -585,7 +583,7 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
   },
   noteEditorWrapper: {
     flex: 1,
-    //position: 'relative',
+    position: 'relative',
   },
   noteEditor: {
     flex: 1,
