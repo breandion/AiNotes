@@ -96,8 +96,7 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
-        // Remove absolute positioning for iOS - let KeyboardAvoidingView handle it
+        shadowRadius: 4,        
       },
       android: {
         position: 'absolute',

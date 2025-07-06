@@ -387,56 +387,65 @@ export default function NotesTab() {
     </View>
   );
 
-  const renderNoteDetailView = () => (
-    <View style={styles.container}>
-      <NotionHeader
-        title={localNoteTitle || 'Untitled'}
-        showBack
-        onBack={handleBackToNotes}
-      />
+const renderNoteDetailView = () => (
+  <View style={styles.container}>
+    <NotionHeader
+      title={localNoteTitle || 'Untitled'}
+      showBack
+      onBack={handleBackToNotes}
+    />
 
-      <View style={styles.noteEditorWrapper}>
-        <KeyboardAvoidingView 
-          style={styles.noteEditorContainer}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-        >
-          <View style={styles.noteEditor}>
-            <TextInput
-              style={styles.titleInput}
-              value={localNoteTitle}
-              onChangeText={handleUpdateNoteTitle}
-              placeholder="Title"
-              placeholderTextColor={colors.textTertiary}          
-            />
-            <TextInput
-              style={styles.noteInput}
-              value={localNoteContent}
-              onChangeText={handleUpdateNoteContent}
-              multiline
-              placeholder="Start writing..."
-              placeholderTextColor={colors.textTertiary}
-              textAlignVertical="top"
-            />
-          </View>
-        </KeyboardAvoidingView>
-
-        {/* Fixed toolbar that sticks to keyboard */}
-        {isKeyboardVisible && (
-          
-            <KeyboardToolbar
-              onUndo={handleUndo}
-              onRedo={handleRedo}
-              onBold={handleBold}
-              onItalic={handleItalic}
-              onList={handleList}
-              onAI={handleAI}
-              onDismiss={handleDismissKeyboard}
-            />
-        )}
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.noteEditorWrapper}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <View style={styles.noteEditor}>
+        <TextInput
+          style={styles.titleInput}
+          value={localNoteTitle}
+          onChangeText={handleUpdateNoteTitle}
+          placeholder="Title"
+          placeholderTextColor={colors.textTertiary}          
+        />
+        <TextInput
+          style={styles.noteInput}
+          value={localNoteContent}
+          onChangeText={handleUpdateNoteContent}
+          multiline
+          placeholder="Start writing..."
+          placeholderTextColor={colors.textTertiary}
+          textAlignVertical="top"
+        />
       </View>
-    </View>
-  );
+      
+      {isKeyboardVisible && (
+        <KeyboardToolbar
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          onBold={handleBold}
+          onItalic={handleItalic}
+          onList={handleList}
+          onAI={handleAI}
+          onDismiss={handleDismissKeyboard}
+        />
+      )}
+    </KeyboardAvoidingView>
+  </View>
+);
+
+
+  /*
+  <KeyboardToolbar
+                  onUndo={handleUndo}
+                  onRedo={handleRedo}
+                  onBold={handleBold}
+                  onItalic={handleItalic}
+                  onList={handleList}
+                  onAI={handleAI}
+                  onDismiss={handleDismissKeyboard}
+                />
+  */
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -554,12 +563,12 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
   },
   noteEditor: {
     flex: 1,
-    backgroundColor: colors.surface,
-    margin: 16,
-    borderRadius: 12,
+    //backgroundColor: colors.surface,
+    margin: 10,
+    //borderRadius: 12,
     padding: 20,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    //borderWidth: 1,
+    //borderColor: colors.borderLight,
   },
   titleInput: {
     fontSize: 24,
@@ -590,5 +599,5 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 8,
-  },
+},
 });
