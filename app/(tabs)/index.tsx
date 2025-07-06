@@ -59,25 +59,52 @@ export default function NotesTab() {
 
   // Enhanced keyboard listeners for both platforms
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      (e) => {
-        setIsKeyboardVisible(true);
-        setKeyboardHeight(e.endCoordinates.height);
-      }
-    );
-    
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => {
-        setIsKeyboardVisible(false);
-        setKeyboardHeight(0);
-      }
-    );
+    let keyboardDidShowListener: any;
+    let keyboardDidHideListener: any;
+    let keyboardWillShowListener: any;
+    let keyboardWillHideListener: any;
+
+    if (Platform.OS === 'ios') {
+      // Use will events for iOS for better timing
+      keyboardWillShowListener = Keyboard.addListener(
+        'keyboardWillShow',
+        (e) => {
+          setIsKeyboardVisible(true);
+          setKeyboardHeight(e.endCoordinates.height);
+        }
+      );
+      
+      keyboardWillHideListener = Keyboard.addListener(
+        'keyboardWillHide',
+        () => {
+          setIsKeyboardVisible(false);
+          setKeyboardHeight(0);
+        }
+      );
+    } else {
+      // Use did events for Android
+      keyboardDidShowListener = Keyboard.addListener(
+        'keyboardDidShow',
+        (e) => {
+          setIsKeyboardVisible(true);
+          setKeyboardHeight(e.endCoordinates.height);
+        }
+      );
+      
+      keyboardDidHideListener = Keyboard.addListener(
+        'keyboardDidHide',
+        () => {
+          setIsKeyboardVisible(false);
+          setKeyboardHeight(0);
+        }
+      );
+    }
 
     return () => {
       keyboardDidShowListener?.remove();
       keyboardDidHideListener?.remove();
+      keyboardWillShowListener?.remove();
+      keyboardWillHideListener?.remove();
     };
   }, []);
 
@@ -387,65 +414,67 @@ export default function NotesTab() {
     </View>
   );
 
-const renderNoteDetailView = () => (
-  <View style={styles.container}>
-    <NotionHeader
-      title={localNoteTitle || 'Untitled'}
-      showBack
-      onBack={handleBackToNotes}
-    />
+  const renderNoteDetailView = () => (
+    <View style={styles.container}>
+      <NotionHeader
+        title={localNoteTitle || 'Untitled'}
+        showBack
+        onBack={handleBackToNotes}
+      />
 
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.noteEditorWrapper}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-    >
-      <View style={styles.noteEditor}>
-        <TextInput
-          style={styles.titleInput}
-          value={localNoteTitle}
-          onChangeText={handleUpdateNoteTitle}
-          placeholder="Title"
-          placeholderTextColor={colors.textTertiary}          
-        />
-        <TextInput
-          style={styles.noteInput}
-          value={localNoteContent}
-          onChangeText={handleUpdateNoteContent}
-          multiline
-          placeholder="Start writing..."
-          placeholderTextColor={colors.textTertiary}
-          textAlignVertical="top"
-        />
-      </View>
-      
-      {isKeyboardVisible && (
-        <KeyboardToolbar
-          onUndo={handleUndo}
-          onRedo={handleRedo}
-          onBold={handleBold}
-          onItalic={handleItalic}
-          onList={handleList}
-          onAI={handleAI}
-          onDismiss={handleDismissKeyboard}
-        />
-      )}
-    </KeyboardAvoidingView>
-  </View>
-);
-
-
-  /*
-  <KeyboardToolbar
-                  onUndo={handleUndo}
-                  onRedo={handleRedo}
-                  onBold={handleBold}
-                  onItalic={handleItalic}
-                  onList={handleList}
-                  onAI={handleAI}
-                  onDismiss={handleDismissKeyboard}
-                />
-  */
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.noteEditorWrapper}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      >
+        <View style={styles.noteEditor}>
+          <TextInput
+            style={styles.titleInput}
+            value={localNoteTitle}
+            onChangeText={handleUpdateNoteTitle}
+            placeholder="Title"
+            placeholderTextColor={colors.textTertiary}          
+          />
+          <TextInput
+            style={styles.noteInput}
+            value={localNoteContent}
+            onChangeText={handleUpdateNoteContent}
+            multiline
+            placeholder="Start writing..."
+            placeholderTextColor={colors.textTertiary}
+            textAlignVertical="top"
+          />
+        </View>
+        
+        {/* Toolbar positioned at bottom when keyboard is visible */}
+        {isKeyboardVisible && (
+          <View style={[
+            styles.keyboardToolbarContainer,
+            Platform.OS === 'ios' && { 
+              position: 'relative',
+              marginBottom: 0
+            },
+            Platform.OS === 'android' && {
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+            }
+          ]}>
+            <KeyboardToolbar
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              onBold={handleBold}
+              onItalic={handleItalic}
+              onList={handleList}
+              onAI={handleAI}
+              onDismiss={handleDismissKeyboard}
+            />
+          </View>
+        )}
+      </KeyboardAvoidingView>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -558,17 +587,10 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     flex: 1,
     position: 'relative',
   },
-  noteEditorContainer: {
-    flex: 1,
-  },
   noteEditor: {
     flex: 1,
-    //backgroundColor: colors.surface,
     margin: 10,
-    //borderRadius: 12,
     padding: 20,
-    //borderWidth: 1,
-    //borderColor: colors.borderLight,
   },
   titleInput: {
     fontSize: 24,
@@ -584,20 +606,9 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     lineHeight: 24,
   },
   keyboardToolbarContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    zIndex: 1000,
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.borderLight,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 8,
-},
+    zIndex: 1000,
+  },
 });

@@ -91,22 +91,7 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,        
-      },
-      android: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        elevation: 8,
-        zIndex: 1000,
-      },
-    }),
+    // Remove platform-specific positioning - let parent handle it
   },
   toolbar: {
     flexDirection: 'row',
