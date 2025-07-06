@@ -452,7 +452,7 @@ export default function NotesTab() {
               position: 'absolute',
               left: 0,
               right: 0,
-              marginBottom: 0
+              //marginBottom: 0
             },
             Platform.OS === 'android' && {
               position: 'absolute',
