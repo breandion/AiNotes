@@ -450,6 +450,8 @@ export default function NotesTab() {
             styles.keyboardToolbarContainer,
             Platform.OS === 'ios' && { 
               position: 'absolute',
+              left: 0,
+              right: 0,
               marginBottom: 0
             },
             Platform.OS === 'android' && {
