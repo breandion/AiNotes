@@ -585,7 +585,7 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
   },
   noteEditorWrapper: {
     flex: 1,
-    position: 'relative',
+    //position: 'relative',
   },
   noteEditor: {
     flex: 1,
